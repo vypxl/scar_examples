@@ -1,0 +1,16 @@
+name: scar_examples
+version: 0.1.0
+
+description: |
+  A collection of examples for the scar game library
+
+authors:
+  - vypxl
+
+crystal: 0.28.0
+
+license: MIT
+
+dependencies:
+  scar:
+    github: vypxl/scar

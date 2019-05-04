@@ -1,0 +1,8 @@
+.vscode/
+
+/lib/
+/bin/
+/.shards/
+/shard.lock
+
+/tmp/
