@@ -14,6 +14,8 @@ class PlayerSystem < Scar::System
   @jump1 : Tween? = nil
   @jump1_h = 0f32
 
+  @jump_sound = SF::Sound.new Assets["jump.wav", Assets::Sound]
+
   SPEED       = 800
   JUMP_HEIGHT = 500
   JUMP_TIME   = 0.8
@@ -50,17 +52,17 @@ class PlayerSystem < Scar::System
     if @can_jump > 0 && @jump_key == 1
       @can_jump -= 1
       spr.state = "jump"
-      app.act Actions::PlaySound.new(Assets["jump.wav", Assets::Sound])
+      @jump_sound.play
       if @can_jump == 1
-        @jump1 = app.tween JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) { tr.pos.y = GROUND - t.fraction * JUMP_HEIGHT; nil }, ->(t : Tween) {
-          @jump1 = app.tween JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) { tr.pos.y = GROUND - (JUMP_HEIGHT - t.fraction * JUMP_HEIGHT); nil }, ->(t : Tween) {
+        @jump1 = app.tween(Tween.new JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) { tr.pos.y = GROUND - t.fraction * JUMP_HEIGHT; nil }, ->(t : Tween) {
+          @jump1 = app.tween( Tween.new JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) { tr.pos.y = GROUND - (JUMP_HEIGHT - t.fraction * JUMP_HEIGHT); nil }, ->(t : Tween) {
             @can_jump = 2
             @jump1 = nil
             spr.state = "idle"
             nil
-          }
+          })
           nil
-        }
+        })
       else
         j = @jump1
         if j
@@ -68,15 +70,15 @@ class PlayerSystem < Scar::System
           j.abort
         end
         @jump1_h = GROUND - tr.pos.y
-        app.tween JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) { tr.pos.y = GROUND - (@jump1_h + t.fraction * JUMP_HEIGHT); nil }, ->(t : Tween) {
-          app.tween JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) { tr.pos.y = GROUND - (@jump1_h + JUMP_HEIGHT - t.fraction * (@jump1_h + JUMP_HEIGHT)); nil }, ->(t : Tween) {
+        app.tween( Tween.new JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) { tr.pos.y = GROUND - (@jump1_h + t.fraction * JUMP_HEIGHT); nil }, ->(t : Tween) {
+          app.tween( Tween.new JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) { tr.pos.y = GROUND - (@jump1_h + JUMP_HEIGHT - t.fraction * (@jump1_h + JUMP_HEIGHT)); nil }, ->(t : Tween) {
             @can_jump = 2
             @jump1 = nil
             spr.state = "idle"
             nil
-          }
+          })
           nil
-        }
+        })
       end
     end
 
