@@ -5,9 +5,9 @@ description: |
   A collection of examples for the scar game library
 
 authors:
-  - vypxl
+  - vypxl <thomas@vypxl.io>
 
-crystal: 0.28.0
+crystal: 0.34.0
 
 license: MIT
 
