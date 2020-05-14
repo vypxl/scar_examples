@@ -1,5 +1,5 @@
 name: scar_examples
-version: 0.1.0
+version: 0.2.0
 
 description: |
   A collection of examples for the scar game library
@@ -14,3 +14,9 @@ license: MIT
 dependencies:
   scar:
     github: vypxl/scar
+
+targets:
+    feature_demo:
+        main: src/feature_demo/main.cr
+    ring_repel:
+        main: src/ring_repel/main.cr
