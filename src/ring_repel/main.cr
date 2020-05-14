@@ -58,8 +58,8 @@ class RingRepel < Scar::App
     sc = Scene.new
     sp = Space.new("ui")
     sc << sp
-    sp << Entity.new("txt", Components::Transform.new(Vec.new(48, 96)), Components::Text.new("Press space to start!", Assets["OpenSans-Regular.ttf", Assets::Font]))
-    sp << Entity.new("score", Components::Transform.new(Vec.new(48, 48)), Components::Text.new("Score: - | Highscore: -", Assets["OpenSans-Regular.ttf", Assets::Font]))
+    sp << Entity.new("txt", Components::Text.new("Press space to start!", Assets["OpenSans-Regular.ttf", Assets::Font]), position: Vec.new(48, 96))
+    sp << Entity.new("score", Components::Text.new("Score: - | Highscore: -", Assets["OpenSans-Regular.ttf", Assets::Font]), position: Vec.new(48, 48))
     sp << Systems::DrawTexts.new
     sp << StartSystem.new
     sc

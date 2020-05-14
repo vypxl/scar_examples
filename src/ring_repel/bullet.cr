@@ -34,20 +34,22 @@ module BulletFactory
         @elapsed = 0
       end
 
-      player = s["player"][Components::Transform].rotation
-      playerlow = (player - Math::PI / 4) % (Math::PI * 2)
-      playerhigh = (player + Math::PI / 4) % (Math::PI * 2)
+      player = s["player"]
+      playerRot = player.rotation
+      playerlow = (playerRot - Math::PI / 4) % (Math::PI * 2)
+      playerhigh = (playerRot + Math::PI / 4) % (Math::PI * 2)
+
       middle = Vec.new(WIDTH / 2, HEIGHT / 2)
 
       # move, destroy and bounce bullets
-      s.each_with_transform BulletComponent do |e, tr, blt|
-        tr.pos += blt.velocity * dt
-        blt.sf.position = tr.pos.sf
+      s.each_with BulletComponent do |e, blt|
+        e.position += blt.velocity * dt
+        blt.sf.position = e.position.sf
 
-        ang = (middle - tr.pos).angle
+        ang = (middle - e.position).angle
 
         # bounce or destroy if out of bounds
-        if !Rect.new(-100, -100, WIDTH + 100, HEIGHT + 100).contains?(tr.pos)
+        if !Rect.new(-100, -100, WIDTH + 100, HEIGHT + 100).contains?(e.position)
           if blt.bounces > 0
             blt.velocity = Vec.from_polar(ang + Random.rand - 0.5, blt.speed)
             blt.bounces -= 1
@@ -61,7 +63,7 @@ module BulletFactory
         ang = ang + Math::PI
 
         # collide with player
-        if tr.pos.dist(middle) - BulletComponent::RADIUS - 3 < 200
+        if e.position.dist(middle) - BulletComponent::RADIUS - 3 < 200
           if (playerlow > playerhigh && ((playerlow < ang && ang < 360) || (playerhigh > ang && ang > 0))) || (playerlow < ang && playerhigh > ang)
             blt.velocity *= -1
             a.broadcast BulletRepelled.new
@@ -74,7 +76,7 @@ module BulletFactory
     end
 
     def render(a, s, dt)
-      s.each_with_transform BulletComponent do |e, tr, blt|
+      s.each_with BulletComponent do |e, blt|
         a.window.draw(blt.sf)
       end
     end
@@ -87,7 +89,7 @@ module BulletFactory
 
   def self.mk_bullet(bounces)
     _spawn = SPAWNS[Random.rand(SPAWNS.size)].dup
-    e = Entity.new("bullet_#{@@bullet_id}", Components::Transform.new(_spawn), BulletComponent.new(_spawn, bounces))
+    e = Entity.new("bullet_#{@@bullet_id}", BulletComponent.new(_spawn, bounces), position: _spawn)
     @@bullet_id += 1
     e
   end

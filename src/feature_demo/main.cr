@@ -1,7 +1,7 @@
 require "scar"
 
 WIDTH  = 1600
-HEIGHT = 900
+HEIGHT =  900
 
 class PlayerComponent < Scar::Component
 end
@@ -23,7 +23,6 @@ class PlayerSystem < Scar::System
 
   def update(app, space, dt)
     player = space["player"]
-    tr = player[Components::Transform]
     spr = player[Components::AnimatedSprite]
 
     movement = Vec.new
@@ -31,13 +30,13 @@ class PlayerSystem < Scar::System
     movement.x -= 1 if app.input.active? :Left
     running = app.input.active? :Run
     movement *= 1.8 if running
-    tr.pos += movement * SPEED * dt
+    player.position += movement * SPEED * dt
 
     spr.state = movement == 0 ? "idle" : (running ? "run" : "walk") unless spr.state == "jump"
 
-    tr.pos.x = WIDTH.to_f32 if tr.pos.x < 0
-    tr.pos.x = 0f32 if tr.pos.x > WIDTH
-    @can_jump = 2 if tr.pos.y == GROUND
+    player.position.x = WIDTH.to_f32 if player.position.x < 0
+    player.position.x = 0f32 if player.position.x > WIDTH
+    @can_jump = 2 if player.position.y == GROUND
 
     if app.input.active? :Jump
       if @jump_key == 0
@@ -54,8 +53,8 @@ class PlayerSystem < Scar::System
       spr.state = "jump"
       @jump_sound.play
       if @can_jump == 1
-        @jump1 = app.tween(Tween.new JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) { tr.pos.y = GROUND - t.fraction * JUMP_HEIGHT; nil }, ->(t : Tween) {
-          @jump1 = app.tween( Tween.new JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) { tr.pos.y = GROUND - (JUMP_HEIGHT - t.fraction * JUMP_HEIGHT); nil }, ->(t : Tween) {
+        @jump1 = app.tween(Tween.new JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) { player.position.y = GROUND - t.fraction * JUMP_HEIGHT; nil }, ->(t : Tween) {
+          @jump1 = app.tween(Tween.new JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) { player.position.y = GROUND - (JUMP_HEIGHT - t.fraction * JUMP_HEIGHT); nil }, ->(t : Tween) {
             @can_jump = 2
             @jump1 = nil
             spr.state = "idle"
@@ -69,9 +68,9 @@ class PlayerSystem < Scar::System
           j.paused = true
           j.abort
         end
-        @jump1_h = GROUND - tr.pos.y
-        app.tween( Tween.new JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) { tr.pos.y = GROUND - (@jump1_h + t.fraction * JUMP_HEIGHT); nil }, ->(t : Tween) {
-          app.tween( Tween.new JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) { tr.pos.y = GROUND - (@jump1_h + JUMP_HEIGHT - t.fraction * (@jump1_h + JUMP_HEIGHT)); nil }, ->(t : Tween) {
+        @jump1_h = GROUND - player.position.y
+        app.tween(Tween.new JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) { player.position.y = GROUND - (@jump1_h + t.fraction * JUMP_HEIGHT); nil }, ->(t : Tween) {
+          app.tween(Tween.new JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) { player.position.y = GROUND - (@jump1_h + JUMP_HEIGHT - t.fraction * (@jump1_h + JUMP_HEIGHT)); nil }, ->(t : Tween) {
             @can_jump = 2
             @jump1 = nil
             spr.state = "idle"
@@ -81,16 +80,15 @@ class PlayerSystem < Scar::System
         })
       end
     end
-
   end
 end
 
 class FPSSystem < Scar::System
-    include Scar
+  include Scar
 
-    def update(app, space, dt)
-        space["fps_counter"][Components::Text].text = "FPS: #{(1 / dt).round 1}"
-    end
+  def update(app, space, dt)
+    space["fps_counter"][Components::Text].text = "FPS: #{(1 / dt).round 1}"
+  end
 end
 
 class ExitHandling < Scar::System
@@ -102,7 +100,7 @@ class ExitHandling < Scar::System
   end
 end
 
-class JumpingSquare < Scar::App
+class FeatureDemo < Scar::App
   include Scar
 
   def init
@@ -150,15 +148,11 @@ class JumpingSquare < Scar::App
       )
     )
 
-
     # Background
     background = Components::Sprite.new(Assets["nested/background.png", Assets::Texture])
     background_tex = background.sf.texture
     background.sf.scale = (Vec.new(WIDTH, HEIGHT) / Vec.from(background_tex.size)).sf if background_tex.is_a? SF::Texture
-    scene["background"] << Entity.new("background",
-      Components::Transform.new(Vec.new 0, 0),
-      background
-    )
+    scene["background"] << Entity.new("background", background)
 
     # Player
     anspr = Components::AnimatedSprite.new(
@@ -169,32 +163,31 @@ class JumpingSquare < Scar::App
     anspr.state = "idle"
 
     player = Entity.new("player",
-      Components::Transform.new(Vec.new 500, PlayerSystem::GROUND),
       anspr,
-      PlayerComponent.new
+      PlayerComponent.new,
+      position: Vec.new(500, PlayerSystem::GROUND)
     )
     scene["main"] << player
 
     # Sample text
     scene["ui"] << Entity.new("text",
-      Components::Transform.new(Vec.new 400, 100),
       Components::Text.new(
         Assets["text.txt", Assets::Text],
         Assets["OpenSans-Regular.ttf", Assets::Font]
-      )
+      ),
+      position: Vec.new(400, 100)
     )
 
     # FPS counter
     scene["ui"] << Entity.new("fps_counter",
-        Components::Transform.new(Vec.new 10, 10),
-        Components::Text.new(
-            "FPS: 0",
-            Assets["OpenSans-Regular.ttf", Assets::Font]
-        )
+      Components::Text.new(
+        "FPS: 0",
+        Assets["OpenSans-Regular.ttf", Assets::Font]
+      ),
+      position: Vec.new(10, 10)
     )
 
-
-    act TimedAction.new(5, -> { Logger.info "hi after 5 seconds" })
+    act TimedAction.new(5, ->{ Logger.info "hi after 5 seconds" })
 
     Music.play("music.ogg")
     Music.current.loop = true
@@ -211,5 +204,5 @@ end
 
 window = SF::RenderWindow.new(SF::VideoMode.new(WIDTH, HEIGHT), "Test", SF::Style::Close)
 
-app = JumpingSquare.new(window, Scar::Input.new)
+app = FeatureDemo.new(window, Scar::Input.new)
 app.run

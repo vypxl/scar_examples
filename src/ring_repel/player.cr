@@ -84,17 +84,15 @@ class PlayerSystem < Scar::System
   end
 
   def update(a, s, dt)
-    transform = s["player"][Components::Transform]
-    transform.rotation = (Vec.from(SF::Mouse.get_position(a.window)) - Vec.new(WIDTH / 2, HEIGHT / 2)).angle
+    s["player"].rotation = (Vec.from(SF::Mouse.get_position(a.window)) - Vec.new(WIDTH / 2, HEIGHT / 2)).angle
   end
 
   def render(a, s, dt)
     playerE = s["player"]
     player = playerE[PlayerComponent]
-    transform = playerE[Components::Transform]
     player.shapes.each do |sp|
-      sp.position = transform.pos.sf
-      sp.rotation = transform.rotation * 180 / Math::PI
+      sp.position = playerE.position.sf
+      sp.rotation = playerE.rotation * 180 / Math::PI
       a.window.draw(sp)
     end
   end

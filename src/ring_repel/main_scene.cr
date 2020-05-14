@@ -22,9 +22,9 @@ class ScoreSystem < Scar::System
 end
 
 def mk_main_scene
-  fps = Entity.new("fps_display", Components::Transform.new(Vec.new(48, 48)), Components::Text.new("0", Assets["OpenSans-Regular.ttf", Assets::Font]))
-  score = Entity.new("score_display", Components::Transform.new(Vec.new(WIDTH - 100, 48)), Components::Text.new("-", Assets["OpenSans-Regular.ttf", Assets::Font]))
-  player = Entity.new("player", Components::Transform.new(Vec.new(WIDTH / 2, HEIGHT / 2)), PlayerComponent.new)
+  fps = Entity.new("fps_display", Components::Text.new("0", Assets["OpenSans-Regular.ttf", Assets::Font]), position: Vec.new(48, 48))
+  score = Entity.new("score_display", Components::Text.new("-", Assets["OpenSans-Regular.ttf", Assets::Font]), position: Vec.new(WIDTH - 100, 48))
+  player = Entity.new("player", PlayerComponent.new, position: Vec.new(WIDTH / 2, HEIGHT / 2))
 
   Scene.new(
     Space.new("game",
