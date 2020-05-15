@@ -22,8 +22,8 @@ class ScoreSystem < Scar::System
 end
 
 def mk_main_scene
-  fps = Entity.new("fps_display", Components::Text.new("0", Assets["OpenSans-Regular.ttf", Assets::Font]), position: Vec.new(48, 48))
-  score = Entity.new("score_display", Components::Text.new("-", Assets["OpenSans-Regular.ttf", Assets::Font]), position: Vec.new(WIDTH - 100, 48))
+  fps = Entity.new("fps_display", Components::Text.new("0",), position: Vec.new(48, 48))
+  score = Entity.new("score_display", Components::Text.new("-"), position: Vec.new(WIDTH - 100, 48))
   player = Entity.new("player", PlayerComponent.new, position: Vec.new(WIDTH / 2, HEIGHT / 2))
 
   Scene.new(
@@ -32,7 +32,7 @@ def mk_main_scene
       z: 0
     ),
     Space.new("ui",
-      fps, score, FpsSystem.new, ScoreSystem.new, Systems::DrawTexts.new,
+      fps, score, FpsSystem.new, ScoreSystem.new,
       z: 1
     ),
   )

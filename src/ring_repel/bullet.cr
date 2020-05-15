@@ -2,15 +2,18 @@ module BulletFactory
   include Scar
 
   struct BulletRepelled < Scar::Event::Event; end
+
   struct BulletHit < Scar::Event::Event; end
 
-  class BulletComponent < Scar::Component
-    getter :color, :sf
+  class BulletComponent < Scar::Components::Drawable
+    getter :color
     property :velocity, :speed, :bounces
+    property sf : SF::Drawable
     RADIUS = 16
 
     @velocity : Vec
     @speed : Float32
+    @sf : SF::CircleShape
 
     def initialize(_spawn, bounces : Int32)
       @color = SF::Color.new(Random.rand(256), Random.rand(256), Random.rand(256))
@@ -44,7 +47,7 @@ module BulletFactory
       # move, destroy and bounce bullets
       s.each_with BulletComponent do |e, blt|
         e.position += blt.velocity * dt
-        blt.sf.position = e.position.sf
+        blt.sf.position = e.position
 
         ang = (middle - e.position).angle
 
@@ -72,12 +75,6 @@ module BulletFactory
             e.suicide
           end
         end
-      end
-    end
-
-    def render(a, s, dt)
-      s.each_with BulletComponent do |e, blt|
-        a.window.draw(blt.sf)
       end
     end
   end

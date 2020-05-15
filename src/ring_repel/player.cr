@@ -41,14 +41,14 @@ class PlayerComponent < Scar::Component
     @paddle.fill_color = SF::Color.new(100, 250, 50)
 
     @inner = SF::CircleShape.new(150, 64)
-    @inner.origin = Vec.new(150, 150).sf
+    @inner.origin = Vec.new(150, 150)
     @inner.fill_color = SF::Color::Black
 
     @inner_frac = FractionalCircle.new(150, 0)
     @inner_frac.fill_color = SF::Color::Red
 
     @body = SF::CircleShape.new(200, 64)
-    @body.origin = Vec.new(200, 200).sf
+    @body.origin = Vec.new(200, 200)
     @body.fill_color = SF::Color::Blue
 
     @shapes = [@body, @paddle, @inner, @inner_frac]
@@ -63,8 +63,8 @@ end
 
 class PlayerSystem < Scar::System
   def initialize
-    @hit_sound = SF::Sound.new Assets["ring_repel/hit.wav", Assets::Sound]
-    @repel_sound = SF::Sound.new Assets["ring_repel/repel.wav", Assets::Sound]
+    @hit_sound = SF::Sound.new Assets.sound "ring_repel/hit.wav"
+    @repel_sound = SF::Sound.new Assets.sound "ring_repel/repel.wav"
   end
 
   def init(a, s)
@@ -91,7 +91,7 @@ class PlayerSystem < Scar::System
     playerE = s["player"]
     player = playerE[PlayerComponent]
     player.shapes.each do |sp|
-      sp.position = playerE.position.sf
+      sp.position = playerE.position
       sp.rotation = playerE.rotation * 180 / Math::PI
       a.window.draw(sp)
     end

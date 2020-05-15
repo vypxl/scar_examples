@@ -27,6 +27,7 @@ class RingRepel < Scar::App
 
     Assets.use "assets"
     Assets.load_all
+    Assets.default_font = Assets.font "OpenSans-Regular.ttf"
 
     subscribe(Event::Closed) { exit(0) }
 
@@ -58,9 +59,8 @@ class RingRepel < Scar::App
     sc = Scene.new
     sp = Space.new("ui")
     sc << sp
-    sp << Entity.new("txt", Components::Text.new("Press space to start!", Assets["OpenSans-Regular.ttf", Assets::Font]), position: Vec.new(48, 96))
-    sp << Entity.new("score", Components::Text.new("Score: - | Highscore: -", Assets["OpenSans-Regular.ttf", Assets::Font]), position: Vec.new(48, 48))
-    sp << Systems::DrawTexts.new
+    sp << Entity.new("txt", Components::Text.new("Press space to start!"), position: Vec.new(48, 96))
+    sp << Entity.new("score", Components::Text.new("Score: - | Highscore: -"), position: Vec.new(48, 48))
     sp << StartSystem.new
     sc
   end
@@ -70,6 +70,6 @@ settings = SF::ContextSettings.new
 settings.antialiasing_level = 4
 window = SF::RenderWindow.new(SF::VideoMode.new(WIDTH, HEIGHT), "Ring Repel", SF::Style::Close, settings)
 desktop_mode = SF::VideoMode.desktop_mode
-window.position = Scar::Vec.new(desktop_mode.width - WIDTH - (desktop_mode.width / 10), desktop_mode.height / 10).sf
+window.position = Scar::Vec.new(desktop_mode.width - WIDTH - (desktop_mode.width / 10), desktop_mode.height / 10)
 app = RingRepel.new(window, Scar::Input.new)
 app.run
