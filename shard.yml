@@ -14,6 +14,7 @@ license: MIT
 dependencies:
   scar:
     github: vypxl/scar
+    branch: master
 
 targets:
     feature_demo:

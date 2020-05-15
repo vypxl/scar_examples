@@ -4,5 +4,5 @@ This repository contains examples of how to use the [Scar game library](https://
 
 To run an example:
 
-1. Install scar
-2. run `scripts/run crystal src/<name>/main.cr`
+1. Run `shards install` (only once)
+2. Run `crystal src/<name>/main.cr`

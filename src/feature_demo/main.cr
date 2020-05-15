@@ -3,6 +3,9 @@ require "scar"
 WIDTH  = 1600
 HEIGHT =  900
 
+Signal::SEGV.reset
+Signal::BUS.reset
+
 class PlayerComponent < Scar::Component
 end
 
@@ -14,7 +17,7 @@ class PlayerSystem < Scar::System
   @jump1 : Tween? = nil
   @jump1_h = 0f32
 
-  @jump_sound = SF::Sound.new Assets["jump.wav", Assets::Sound]
+  @jump_sound = Assets.sound "jump.wav"
 
   SPEED       = 800
   JUMP_HEIGHT = 500
@@ -104,7 +107,7 @@ class FeatureDemo < Scar::App
   include Scar
 
   def init
-    @window.position = Vec.new(window.position.x + 100, 100).sf
+    @window.position = Vec.new(window.position.x + 100, 100)
     @window.framerate_limit = 120
 
     @input.bind_digital(:Closed) { Input.sf_key(:Escape) }
@@ -130,33 +133,32 @@ class FeatureDemo < Scar::App
     Assets.use "assets"
     # Assets.cache_zipfile "assets.zip"
     Assets.load_all
+    Assets.default_font = Assets.font "OpenSans-Regular.ttf"
 
     self << Scene.new(
-      Space.new("background", Systems::DrawSprites.new, z: 0),
-      Space.new(
-        "main",
+      Space.new("ui",
+        FPSSystem.new,
+        z: 2
+      ),
+      Space.new("main",
         ExitHandling.new,
         PlayerSystem.new,
-        Systems::DrawSprites.new,
         Systems::AnimateSprites.new,
         z: 1
       ),
-      Space.new("ui",
-        Systems::DrawTexts.new,
-        FPSSystem.new,
-        z: 2
-      )
+      Space.new("background", z: 0)
     )
 
     # Background
-    background = Components::Sprite.new(Assets["nested/background.png", Assets::Texture])
-    background_tex = background.sf.texture
-    background.sf.scale = (Vec.new(WIDTH, HEIGHT) / Vec.from(background_tex.size)).sf if background_tex.is_a? SF::Texture
-    scene["background"] << Entity.new("background", background)
+    background_tex = Assets.texture "nested/background.png"
+    scene["background"] << Entity.new("background",
+      Components::Sprite.new(background_tex),
+      scale: Vec.new(WIDTH, HEIGHT) / Vec.from(background_tex.size)
+    )
 
     # Player
     anspr = Components::AnimatedSprite.new(
-      Assets["spritesheet.png", Assets::Texture],
+      Assets.texture("spritesheet.png"),
       {128, 128},
       {"idle" => {0, 4, 4}, "walk" => {0, 4, 8}, "run" => {0, 4, 16}, "jump" => {8, 8, 16}}
     )
@@ -165,27 +167,33 @@ class FeatureDemo < Scar::App
     player = Entity.new("player",
       anspr,
       PlayerComponent.new,
-      position: Vec.new(500, PlayerSystem::GROUND)
+      position: Vec.new(500, PlayerSystem::GROUND),
+      z: 1
     )
     scene["main"] << player
+    scene["main"] << Entity.new("behind_player",
+      Components::Sprite.new(Assets.texture("nested/background.png"), Rect.new(0, 0, 128, 128)),
+      position: Vec.new(200, PlayerSystem::GROUND),
+      z: 0
+    )
 
     # Sample text
     scene["ui"] << Entity.new("text",
-      Components::Text.new(
-        Assets["text.txt", Assets::Text],
-        Assets["OpenSans-Regular.ttf", Assets::Font]
-      ),
+      Components::Text.new(Assets.text "text.txt"),
       position: Vec.new(400, 100)
     )
 
     # FPS counter
     scene["ui"] << Entity.new("fps_counter",
-      Components::Text.new(
-        "FPS: 0",
-        Assets["OpenSans-Regular.ttf", Assets::Font]
-      ),
+      Components::Text.new("FPS: 0"),
       position: Vec.new(10, 10)
     )
+
+    cam = scene["ui"].camera
+    cam.simple = false
+    cam.reset(Rectf.new(0, 0, 600, 600))
+    cam.rotate(90)
+    cam.viewport = Rectf.new(0.1, 0.1, 0.6, 0.6)
 
     act TimedAction.new(5, ->{ Logger.info "hi after 5 seconds" })
 
