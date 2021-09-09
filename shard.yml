@@ -1,5 +1,5 @@
 name: scar_examples
-version: 0.2.0
+version: 0.2.1
 
 description: |
   A collection of examples for the scar game library
@@ -14,7 +14,7 @@ license: MIT
 dependencies:
   scar:
     github: vypxl/scar
-    branch: master
+    branch: main
 
 targets:
     feature_demo:

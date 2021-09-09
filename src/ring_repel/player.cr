@@ -30,6 +30,7 @@ class FractionalCircle < SF::Shape
 end
 
 class PlayerComponent < Scar::Component
+  include SF::Drawable
   getter :shapes, :hp
 
   @hp : UInt8
@@ -59,16 +60,20 @@ class PlayerComponent < Scar::Component
     @body.fill_color = SF::Color.new(255 - (@hp / 100 * 255).to_i, 0, (@hp / 100 * 255).to_i)
     @inner_frac.fraction = 1.0 - @hp / 100
   end
+
+  def draw(target, states)
+    shapes.each { |shape| target.draw(shape, states) }
+  end
 end
 
 class PlayerSystem < Scar::System
   def initialize
-    @hit_sound = SF::Sound.new Assets.sound "ring_repel/hit.wav"
-    @repel_sound = SF::Sound.new Assets.sound "ring_repel/repel.wav"
+    @hit_sound = SF::Sound.new(Assets.sound "ring_repel/hit.wav")
+    @repel_sound = SF::Sound.new(Assets.sound "ring_repel/repel.wav")
   end
 
   def init(a, s)
-    a.subscribe(BulletFactory::BulletHit) {
+    a.subscribe(BulletFactory::BulletHit) do
       player = s["player"][PlayerComponent]
       player.hp -= 1 if player.hp > 0
       @hit_sound.play
@@ -76,24 +81,12 @@ class PlayerSystem < Scar::System
       if player.hp == 0
         a.game_over
       end
-    }
+    end
 
-    a.subscribe(BulletFactory::BulletRepelled) {
-      @repel_sound.play
-    }
+    a.subscribe(BulletFactory::BulletRepelled) { @repel_sound.play }
   end
 
   def update(a, s, dt)
-    s["player"].rotation = (Vec.from(SF::Mouse.get_position(a.window)) - Vec.new(WIDTH / 2, HEIGHT / 2)).angle
-  end
-
-  def render(a, s, dt)
-    playerE = s["player"]
-    player = playerE[PlayerComponent]
-    player.shapes.each do |sp|
-      sp.position = playerE.position
-      sp.rotation = playerE.rotation * 180 / Math::PI
-      a.window.draw(sp)
-    end
+    s["player"].rotation = (SF::Mouse.get_position(a.window) - Vec.new(WIDTH / 2, HEIGHT / 2)).angle_deg
   end
 end

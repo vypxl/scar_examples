@@ -70,6 +70,6 @@ settings = SF::ContextSettings.new
 settings.antialiasing_level = 4
 window = SF::RenderWindow.new(SF::VideoMode.new(WIDTH, HEIGHT), "Ring Repel", SF::Style::Close, settings)
 desktop_mode = SF::VideoMode.desktop_mode
-window.position = Scar::Vec.new(desktop_mode.width - WIDTH - (desktop_mode.width / 10), desktop_mode.height / 10)
+window.position = SF.vector2i(desktop_mode.width - WIDTH - (desktop_mode.width // 10).to_i, desktop_mode.height // 10)
 app = RingRepel.new(window, Scar::Input.new)
 app.run

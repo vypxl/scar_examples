@@ -17,7 +17,7 @@ class PlayerSystem < Scar::System
   @jump1 : Tween? = nil
   @jump1_h = 0f32
 
-  @jump_sound = Assets.sound "jump.wav"
+  @jump_sound = SF::Sound.new(Assets.sound "jump.wav")
 
   SPEED       = 800
   JUMP_HEIGHT = 500
@@ -37,8 +37,10 @@ class PlayerSystem < Scar::System
 
     spr.state = movement == 0 ? "idle" : (running ? "run" : "walk") unless spr.state == "jump"
 
-    player.position.x = WIDTH.to_f32 if player.position.x < 0
-    player.position.x = 0f32 if player.position.x > WIDTH
+    x = player.position.x
+    x = WIDTH.to_f32 if player.position.x < 0
+    x = 0f32 if player.position.x > WIDTH
+    player.position = player.position.new_x(x)
     @can_jump = 2 if player.position.y == GROUND
 
     if app.input.active? :Jump
@@ -56,8 +58,12 @@ class PlayerSystem < Scar::System
       spr.state = "jump"
       @jump_sound.play
       if @can_jump == 1
-        @jump1 = app.tween(Tween.new JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) { player.position.y = GROUND - t.fraction * JUMP_HEIGHT; nil }, ->(t : Tween) {
-          @jump1 = app.tween(Tween.new JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) { player.position.y = GROUND - (JUMP_HEIGHT - t.fraction * JUMP_HEIGHT); nil }, ->(t : Tween) {
+        @jump1 = app.tween(Tween.new JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) {
+          player.position = player.position.new_y(GROUND - t.fraction * JUMP_HEIGHT)
+        }, ->(t : Tween) {
+          @jump1 = app.tween(Tween.new JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) {
+          player.position = player.position.new_y(GROUND - (JUMP_HEIGHT - t.fraction * JUMP_HEIGHT))
+        }, ->(t : Tween) {
             @can_jump = 2
             @jump1 = nil
             spr.state = "idle"
@@ -72,8 +78,12 @@ class PlayerSystem < Scar::System
           j.abort
         end
         @jump1_h = GROUND - player.position.y
-        app.tween(Tween.new JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) { player.position.y = GROUND - (@jump1_h + t.fraction * JUMP_HEIGHT); nil }, ->(t : Tween) {
-          app.tween(Tween.new JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) { player.position.y = GROUND - (@jump1_h + JUMP_HEIGHT - t.fraction * (@jump1_h + JUMP_HEIGHT)); nil }, ->(t : Tween) {
+        app.tween(Tween.new JUMP_TIME/2, Easing::EaseOutQuad.new, ->(t : Tween) {
+          player.position = player.position.new_y(GROUND - (@jump1_h + t.fraction * JUMP_HEIGHT))
+        }, ->(t : Tween) {
+          app.tween(Tween.new JUMP_TIME/2, Easing::EaseInQuad.new, ->(t : Tween) {
+            player.position = player.position.new_y(GROUND - (@jump1_h + JUMP_HEIGHT - t.fraction * (@jump1_h + JUMP_HEIGHT)))
+          }, ->(t : Tween) {
             @can_jump = 2
             @jump1 = nil
             spr.state = "idle"
@@ -99,7 +109,7 @@ class ExitHandling < Scar::System
 
   def update(a, s, dt)
     a.broadcast(Event::Closed.new) if a.input.active?(:Closed)
-    s["img"].suicide if a.input.active?(:Kill) && s["img"]?
+    s["behind_player"].destroy if a.input.active?(:Kill) && s["behind_player"]?
   end
 end
 
@@ -107,7 +117,7 @@ class FeatureDemo < Scar::App
   include Scar
 
   def init
-    @window.position = Vec.new(window.position.x + 100, 100)
+    @window.position = SF.vector2i(window.position.x + 100, 100)
     @window.framerate_limit = 120
 
     @input.bind_digital(:Closed) { Input.sf_key(:Escape) }
@@ -153,7 +163,7 @@ class FeatureDemo < Scar::App
     background_tex = Assets.texture "nested/background.png"
     scene["background"] << Entity.new("background",
       Components::Sprite.new(background_tex),
-      scale: Vec.new(WIDTH, HEIGHT) / Vec.from(background_tex.size)
+      scale: Vec.new(WIDTH, HEIGHT) / background_tex.size
     )
 
     # Player
@@ -172,7 +182,7 @@ class FeatureDemo < Scar::App
     )
     scene["main"] << player
     scene["main"] << Entity.new("behind_player",
-      Components::Sprite.new(Assets.texture("nested/background.png"), Rect.new(0, 0, 128, 128)),
+      Components::Sprite.new(Assets.texture("nested/background.png"), SF::Rect.new(0, 0, 128, 128)),
       position: Vec.new(200, PlayerSystem::GROUND),
       z: 0
     )
@@ -190,12 +200,11 @@ class FeatureDemo < Scar::App
     )
 
     cam = scene["ui"].camera
-    cam.simple = false
-    cam.reset(Rectf.new(0, 0, 600, 600))
+    cam.reset(SF::Rect(Float32).new(0, 0, 600, 600))
     cam.rotate(90)
-    cam.viewport = Rectf.new(0.1, 0.1, 0.6, 0.6)
+    cam.viewport = SF::Rect(Float32).new(0.1, 0.1, 0.6, 0.6)
 
-    act TimedAction.new(5, ->{ Logger.info "hi after 5 seconds" })
+    act Actions::Timed.new(5, ->{ Logger.info "hi after 5 seconds" })
 
     Music.play("music.ogg")
     Music.current.loop = true

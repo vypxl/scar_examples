@@ -8,21 +8,21 @@ module BulletFactory
   class BulletComponent < Scar::Components::Drawable
     getter :color
     property :velocity, :speed, :bounces
-    property sf : SF::Drawable
+    property drawable : SF::Drawable
     RADIUS = 16
 
     @velocity : Vec
     @speed : Float32
-    @sf : SF::CircleShape
+    @drawable : SF::CircleShape
 
     def initialize(_spawn, bounces : Int32)
       @color = SF::Color.new(Random.rand(256), Random.rand(256), Random.rand(256))
-      @sf = SF::CircleShape.new(RADIUS)
-      @sf.fill_color = @color
-      @sf.origin = {RADIUS, RADIUS}
+      @drawable = SF::CircleShape.new(RADIUS)
+      @drawable.fill_color = @color
+      @drawable.origin = {RADIUS, RADIUS}
       @speed = Random.rand(200..350).to_f32
       @bounces = bounces
-      @velocity = (Vec.new(WIDTH / 2, HEIGHT / 2) - _spawn).unit * @speed # Vec.new(Random.rand - 0.5, Random.rand - 0.5).unit * @speed
+      @velocity = (Vec.new(WIDTH / 2, HEIGHT / 2) - _spawn).unit * @speed
     end
   end
 
@@ -38,41 +38,37 @@ module BulletFactory
       end
 
       player = s["player"]
-      playerRot = player.rotation
-      playerlow = (playerRot - Math::PI / 4) % (Math::PI * 2)
-      playerhigh = (playerRot + Math::PI / 4) % (Math::PI * 2)
+      player_rot = player.rotation
 
       middle = Vec.new(WIDTH / 2, HEIGHT / 2)
 
       # move, destroy and bounce bullets
       s.each_with BulletComponent do |e, blt|
         e.position += blt.velocity * dt
-        blt.sf.position = e.position
 
-        ang = (middle - e.position).angle
+        ang = (middle - e.position).angle_deg
 
         # bounce or destroy if out of bounds
-        if !Rect.new(-100, -100, WIDTH + 100, HEIGHT + 100).contains?(e.position)
+        unless SF::Rect.new(-100, -100, WIDTH + 100, HEIGHT + 100).contains?(e.position)
           if blt.bounces > 0
-            blt.velocity = Vec.from_polar(ang + Random.rand - 0.5, blt.speed)
+            blt.velocity = Vec.from_polar_deg(ang + (Random.rand - 0.5) * 30, blt.speed)
             blt.bounces -= 1
           else
-            e.suicide
+            e.destroy
           end
         end
 
-        # normalize and reverse ang to test against player
-        # ang = -ang
-        ang = ang + Math::PI
+        # convert to absolute angle to test against player (-180..180 -> 0..360)
+        ang = ang + 180
 
         # collide with player
         if e.position.dist(middle) - BulletComponent::RADIUS - 3 < 200
-          if (playerlow > playerhigh && ((playerlow < ang && ang < 360) || (playerhigh > ang && ang > 0))) || (playerlow < ang && playerhigh > ang)
+          if (180 - ((ang - player_rot).abs - 180).abs).abs < 45
             blt.velocity *= -1
             a.broadcast BulletRepelled.new
           else
             a.broadcast BulletHit.new
-            e.suicide
+            e.destroy
           end
         end
       end
